@@ -4,9 +4,17 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.HomeController.index()
+#GET     /                           controllers.HomeController.index()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 GET     /api/     controllers.ApplicationController.index()
+
+POST  /api/      controllers.ApplicationController.create()
+
+GET   /api/     controllers.ApplicationController.read(_id:String)
+
+PUT   /api/     controllers.ApplicationController.update(_id:String)
+
+DELETE   /api/  controllers.ApplicationController.delete(_id:String)

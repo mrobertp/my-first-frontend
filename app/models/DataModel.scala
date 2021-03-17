@@ -1,9 +1,10 @@
+package models
 import play.api.libs.json.{Json, OFormat}
 
 case class DataModel(
                _id:String,
                name:String,
-               author:String,
+               description:String,
                numSales:Int
                )
 
