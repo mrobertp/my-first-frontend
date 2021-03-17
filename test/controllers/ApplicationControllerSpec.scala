@@ -1,5 +1,7 @@
 package controllers
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import models.DataModel
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.UnitSpec
@@ -18,6 +20,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite{
+
+  implicit val system: ActorSystem = ActorSystem("Sys")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+
   val controllerComponents: ControllerComponents = app.injector.instanceOf[ControllerComponents]
   implicit val executionContext: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   val mockDataRepository: DataRepository = mock[DataRepository]
@@ -27,12 +34,24 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     mockDataRepository,
     executionContext
   )
+  val dataModel:DataModel = DataModel ("abcd",
+    "test name",
+    "test description",
+    100)
+  val jsonBody: JsObject = Json.obj(
+    "_id" -> "abcd",
+    "name" -> "test name",
+    "description" -> "test description",
+    "numSales" -> 100
+  )
 
+  val jsonBody2: JsObject = Json.obj(
+    "_id" -> "abcd",
+    "name" -> "test name",
+    "description" -> "test description",
+    "numSales" -> 200
+  )
   "ApplicationController .index()" should {
-    val dataModel:DataModel = DataModel ("abcd",
-      "test name",
-      "test description",
-      100)
 
     when(mockDataRepository.find(any())(any()))
       .thenReturn(Future(List(dataModel)))
@@ -52,12 +71,6 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
 
     "the json body is valid" should {
 
-      val jsonBody: JsObject = Json.obj(
-        "_id" -> "abcd",
-        "name" -> "test name",
-        "description" -> "test description",
-        "numSales" -> 100
-      )
 
       val writeResult: WriteResult = LastError(ok = true, None, None, None, 0, None, updatedExisting = false, None, None, wtimeout = false, None, None)
 
@@ -88,12 +101,28 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
 
 
   "ApplicationController .read()" should {
-
+    when(mockDataRepository.read(any()))
+      .thenReturn(Future(dataModel))
+    val resultValid = TestApplicationController.read("abcd")(FakeRequest())
+    "return the correct json" in {
+      await(jsonBodyOf(resultValid)) shouldBe (jsonBody)
+    }
+    "return the OK status" in{
+      status(resultValid) shouldBe Status.OK
+    }
   }
 
   "ApplicationController .update()" should {
+    when(mockDataRepository.update(any()))
+      .thenReturn(Future(dataModel))
 
+    val resultValid = TestApplicationController.update("abcd")(FakeRequest().withBody(jsonBody2))
+
+    "return the correct json" in {
+      await(jsonBodyOf(resultValid)) shouldBe (jsonBody2)
+    }
   }
+
   "ApplicationController .delete()" should {
 
   }
