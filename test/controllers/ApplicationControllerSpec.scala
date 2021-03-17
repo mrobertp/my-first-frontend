@@ -38,6 +38,8 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     "test name",
     "test description",
     100)
+
+
   val jsonBody: JsObject = Json.obj(
     "_id" -> "abcd",
     "name" -> "test name",
@@ -115,7 +117,7 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
   "ApplicationController .update()" should {
     when(mockDataRepository.update(any()))
       .thenReturn(Future(dataModel))
-
+    TestApplicationController.create()(FakeRequest().withBody(jsonBody))
     val resultValid = TestApplicationController.update("abcd")(FakeRequest().withBody(jsonBody2))
 
     "return the correct json" in {
@@ -124,6 +126,14 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
   }
 
   "ApplicationController .delete()" should {
+    when(mockDataRepository.delete(any()))
+      .thenReturn(Future(null))
+    val testValid  = TestApplicationController.delete("abcd")(FakeRequest())
+
+    "return id and find" in {
+      status(testValid) shouldBe Status.OK
+    }
+
 
   }
 
