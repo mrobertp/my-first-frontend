@@ -8,7 +8,7 @@ case class DataModel(
                numSales:Int
                )
 
-//Format data model to Json
+//Format data model to Json - Object class similar to java statics
 object DataModel{
   implicit val formats:OFormat[DataModel] = Json.format[DataModel]
 }

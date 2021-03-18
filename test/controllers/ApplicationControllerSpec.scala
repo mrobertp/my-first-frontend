@@ -36,7 +36,7 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     executionContext
   )
 
-
+/** dummy data  - data model:DataModel , jsonBody:JsObject, jsonBody2: JsObject*/
   val dataModel:DataModel = DataModel ("abcd",
     "test name",
     "test description",
@@ -55,21 +55,15 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     "description" -> "test description",
     "numSales" -> 200
   )
-  "ApplicationController .index()" should {
 
+
+  "ApplicationController .index()" should {
     when(mockDataRepository.find(any())(any()))
       .thenReturn(Future(List(dataModel)))
-
     val result = TestApplicationController.index()(FakeRequest())
-
     "return OK-200" in {
       status(result) shouldBe Status.OK
     }
-
-//    "return jsonBody" in {
-//      await(jsonBodyOf(result)) shouldBe dataModel
-//    }
-
   }
 
   "ApplicationController .create" when {
@@ -140,7 +134,7 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     val resultValid = TestApplicationController.update("abcd")(FakeRequest().withBody(jsonBody2))
 
     "return the correct json" in {
-      await(jsonBodyOf(resultValid)) shouldBe (jsonBody)
+      await(jsonBodyOf(resultValid)) shouldBe (jsonBody) //Not Json.arr(json body as in tutorial)
     }
   }
 
@@ -155,7 +149,7 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     val testValid  = TestApplicationController.delete("abcd")(FakeRequest())
 
     "return id and find" in {
-      status(testValid) shouldBe 202
+      status(testValid) shouldBe Status.OK
     }
 
 
