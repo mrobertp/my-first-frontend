@@ -6,12 +6,14 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc._
 import reactivemongo.core.errors.DatabaseException
 import repositories.DataRepository
-
 import scala.concurrent.{ExecutionContext, Future}
 
 class ApplicationController @Inject()(val controllerComponents: ControllerComponents,
                                       dataRepository: DataRepository,
                                       implicit val ex:ExecutionContext) extends BaseController {
+
+
+
   def index() = Action.async { implicit request =>
     dataRepository.find().map(items => Ok(Json.toJson(items)))
   }
@@ -36,7 +38,11 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   def update(id:String) = Action.async(parse.json){ implicit request =>
     request.body.validate[DataModel] match {
       case JsSuccess(dataModel: DataModel, _) =>
-        dataRepository.update(dataModel).map(items => Accepted(Json.toJson(items)))
+        dataRepository.update(dataModel).map(items => Accepted(Json.toJson(items))) recover {
+          case _: DatabaseException => InternalServerError(Json.obj(
+            "message" -> "Error updating item to Mongo"
+          ))
+        }
       case JsError(_) => Future(BadRequest)
     }
   }

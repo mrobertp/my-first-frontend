@@ -13,6 +13,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.api.commands.{LastError, WriteResult}
+import reactivemongo.core.errors.GenericDriverException
 import repositories.DataRepository
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -34,11 +35,12 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     mockDataRepository,
     executionContext
   )
+
+
   val dataModel:DataModel = DataModel ("abcd",
     "test name",
     "test description",
     100)
-
 
   val jsonBody: JsObject = Json.obj(
     "_id" -> "abcd",
@@ -57,6 +59,7 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
 
     when(mockDataRepository.find(any())(any()))
       .thenReturn(Future(List(dataModel)))
+
     val result = TestApplicationController.index()(FakeRequest())
 
     "return OK-200" in {
@@ -82,8 +85,24 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
       val result = TestApplicationController.create()(FakeRequest().withBody(jsonBody))
 
       "return Created" in {
-        status(result) shouldBe Status.CREATED    }
+        status(result) shouldBe Status.CREATED
+      }
     }
+      "the mongo data creation failed" should {
+
+        when(mockDataRepository.create(any()))
+          .thenReturn(Future.failed(GenericDriverException("Error")))
+
+        "return an error" in {
+
+          val result = TestApplicationController.create()(FakeRequest().withBody(jsonBody))
+
+          status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+          await(bodyOf(result)) shouldBe Json.obj("message" -> "Error adding item to Mongo").toString()
+        }
+      }
+
+
 
 
     "the json bosy is not valid" should {
@@ -117,21 +136,26 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
   "ApplicationController .update()" should {
     when(mockDataRepository.update(any()))
       .thenReturn(Future(dataModel))
-    TestApplicationController.create()(FakeRequest().withBody(jsonBody))
+    //TestApplicationController.create()(FakeRequest().withBody(jsonBody))
     val resultValid = TestApplicationController.update("abcd")(FakeRequest().withBody(jsonBody2))
 
     "return the correct json" in {
-      await(jsonBodyOf(resultValid)) shouldBe (jsonBody2)
+      await(jsonBodyOf(resultValid)) shouldBe (jsonBody)
     }
   }
 
   "ApplicationController .delete()" should {
+
+    //Not really sure what this is doing
+    //add dataModel to MongoDB using create
+    //Delete from mongoDb
+    //check deletion is successful
     when(mockDataRepository.delete(any()))
       .thenReturn(Future(null))
     val testValid  = TestApplicationController.delete("abcd")(FakeRequest())
 
     "return id and find" in {
-      status(testValid) shouldBe Status.OK
+      status(testValid) shouldBe 202
     }
 
 
