@@ -32,10 +32,14 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   }
 
   def read(id:String):Action[AnyContent] = Action.async  {implicit request =>
-    dataRepository.read(id).map(items => Ok(Json.toJson(items)))
+    dataRepository.read(id).map(items => Ok(Json.toJson(items)))recover {
+      case _: DatabaseException => InternalServerError(Json.obj(
+        "message" -> "couldnt read in mongo"
+      ))
+    }
   }
 
-  def update(id:String) = Action.async(parse.json){ implicit request =>
+  def update(id:String):Action[JsValue] = Action.async(parse.json){ implicit request =>
     request.body.validate[DataModel] match {
       case JsSuccess(dataModel: DataModel, _) =>
         dataRepository.update(dataModel).map(items => Accepted(Json.toJson(items))) recover {
@@ -48,7 +52,7 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   }
 
 
-  def delete(id:String) = Action.async{implicit request =>
+  def delete(id:String):Action[AnyContent] = Action.async{implicit request =>
     dataRepository.delete(id).map(_ => Ok)
   }
 

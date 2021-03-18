@@ -144,6 +144,7 @@ class ApplicationControllerSpec extends UnitSpec with MockitoSugar with GuiceOne
     //add dataModel to MongoDB using create
     //Delete from mongoDb
     //check deletion is successful
+    //I can tell delete returns HTTP 200 - No idea if actually been deleted is this implied?
     when(mockDataRepository.delete(any()))
       .thenReturn(Future(null))
     val testValid  = TestApplicationController.delete("abcd")(FakeRequest())
